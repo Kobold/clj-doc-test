@@ -1,8 +1,8 @@
-
 (ns
     #^{:author "Andy Kish"
-       :doc "Verifies correctness of example expressions in doc-strings"}
+       :doc "Verifies correctness of example expressions in doc-strings."}
   doc-test
+  (:use clojure.test)
   (:use [clojure.contrib.str-utils2 :only (split)]))
 
 
@@ -33,7 +33,15 @@
      (map expr-correct? expressions))))
 
 (defmacro doctest
-  "Runs the expressions in the documentation for a var."
-  [name]
-  `(doctest-str
-    (:doc (meta (var ~name)))))
+  "Creates a (deftest ...) form based upon the examples in f's doc."
+  [f]
+  `(let [docstr# (:doc (meta (var ~f)))
+         exprs# (find-expressions docstr#)]
+     (deftest testname#
+       (map (fn [[expr# result#]] (is (= (eval expr#) result#)))
+            exprs#))))
+
+; what we're shooting for, approximately
+;(deftest adder10386
+;  (let [[expr result] (read-expr-pair "((adder 1) 4) 3")]
+;    (is (= (eval expr) result))))
