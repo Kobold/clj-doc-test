@@ -25,21 +25,19 @@
   (let [doctest-strings (drop 1 (split docstr #"=>"))]
     (map read-expr-pair doctest-strings)))
 
-(defn doctest-str [docstr]
-  (let [expressions (find-expressions docstr)
-        expr-correct? (fn [[exp result]] (assert (= (eval exp)
-                                                    result)))]
-    (dorun
-     (map expr-correct? expressions))))
+(defn to-is [doc]
+  (let [exprs (find-expressions doc)]
+    (map (fn [[expr result]] `(is (= (eval ~expr) ~result)))
+         exprs)))
 
 (defmacro doctest
-  "Creates a (deftest ...) form based upon the examples in f's doc."
   [f]
-  `(let [docstr# (:doc (meta (var ~f)))
-         exprs# (find-expressions docstr#)]
-     (deftest testname#
-       (map (fn [[expr# result#]] (is (= (eval expr#) result#)))
-            exprs#))))
+  "Creates a (deftest ...) form based upon the examples in f's doc."
+  `(deftest testname#
+     ~@(to-is (eval `(:doc (meta (var ~f)))))))
+
+
+(doctest adder)
 
 ; what we're shooting for, approximately
 ;(deftest adder10386
