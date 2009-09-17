@@ -39,17 +39,15 @@
 (defmacro doc-test
   "Creates a (deftest ...) form based upon the examples in f's doc."
   [f]
-  (let [testname (gensym "doctest-")
-        doc-string (eval `(:doc (meta (var ~f))))
-        is-statments (to-is doc-string)]
-    (if (seq is-statments) ; only make a test is there are doc-tests
-      `(deftest ~testname
+  (let [f-meta (eval `(meta (var ~f)))
+        is-statments (to-is (:doc f-meta))]
+    (if (seq is-statments) ; only make a test if there are doc-tests
+      `(deftest ~(gensym (str (:name f-meta) "__doc-test__"))
          ~@is-statments))))
 
 ; what the doc-test macro output is shooting for, approximately
-;(deftest doctest-adder-blah-blah
-;  (let [[expr result] (read-expr-pair "((adder 1) 4) 3")]
-;    (is (= (eval expr) result))))
+;(deftest adder__doc-test__...
+;  (is (= ((adder 1) 4) 3)))
 
 (doc-test read-expr-pair)
 (doc-test find-expression-strings)
