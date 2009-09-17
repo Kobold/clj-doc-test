@@ -19,13 +19,17 @@
   "Finds expressions that they belong in a REPL. Namely, the => arrow
   beginning a line followed by 2 expressions.
 
-  => (find-expression-strings \"=> ((adder 1) 2) 3\")
+  => (find-expression-strings (str \\newline \"=> ((adder 1) 2) 3\"))
   (\" ((adder 1) 2) 3\")"
   [docstr]
   (drop 1 (re-split #"\n\s*=>" docstr)))
 
 (defn to-is
-  "Converts a doc-test to forms using clojure.test/is."
+  "Converts a doc-test to forms using clojure.test/is.
+
+  => (to-is (:doc (meta (var read-expr-pair))))
+  ((clojure.test/is (clojure.core/= (read-expr-pair \"(+ 1 2) 3\")
+                                    '[(+ 1 2) 3])))"
   [doc]
   (let [expr-strs (find-expression-strings doc)
         exprs (map read-expr-pair expr-strs)]
@@ -49,4 +53,4 @@
 
 (doc-test read-expr-pair)
 (doc-test find-expression-strings)
-;(doc-test to-is)
+(doc-test to-is)
