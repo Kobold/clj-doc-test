@@ -29,7 +29,7 @@
   [doc]
   (let [expr-strs (find-expression-strings doc)
         exprs (map read-expr-pair expr-strs)]
-    (map (fn [[expr result]] `(is (= (eval ~expr) ~result)))
+    (map (fn [[expr result]] `(is (= ~expr '~result)))
          exprs)))
 
 (defmacro doc-test
@@ -48,5 +48,5 @@
 ;    (is (= (eval expr) result))))
 
 (doc-test read-expr-pair)
-;(doc-test find-expression-strings)
+(doc-test find-expression-strings)
 ;(doc-test to-is)
