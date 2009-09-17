@@ -5,16 +5,6 @@
   (:use clojure.test)
   (:use [clojure.contrib.str-utils :only (re-split)]))
 
-(defn- adder
-  "A simple function to test the doctest macro with.
-
-  => ((adder 1) 2)
-  3
-  => ((adder 4) 5)
-  9"
-  [n1]
-  (fn [n2] (+ n1 n2)))
-
 (defn- read-expr-pair
   "Read two expressions from expr-string and return a tuple of them.
 
@@ -57,8 +47,6 @@
 ;  (let [[expr result] (read-expr-pair "((adder 1) 4) 3")]
 ;    (is (= (eval expr) result))))
 
-(doc-test adder)
 (doc-test read-expr-pair)
 ;(doc-test find-expression-strings)
 ;(doc-test to-is)
-(run-tests)
