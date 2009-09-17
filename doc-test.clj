@@ -3,43 +3,62 @@
        :doc "Verifies correctness of example expressions in doc-strings."}
   doc-test
   (:use clojure.test)
-  (:use [clojure.contrib.str-utils2 :only (split)]))
-
+  (:use [clojure.contrib.str-utils :only (re-split)]))
 
 (defn- adder
-  "returns a HOF adding two numbers together
+  "A simple function to test the doctest macro with.
 
   => ((adder 1) 2)
   3
   => ((adder 4) 5)
-  10"
+  9"
   [n1]
   (fn [n2] (+ n1 n2)))
 
-(defn- read-expr-pair [expr-string]
+(defn- read-expr-pair
+  "Read two expressions from expr-string and return a tuple of them.
+
+  => (read-expr-pair \"(+ 1 2) 3\")
+  [(+ 1 2) 3]"
+  [expr-string]
   (with-open [sreader (new java.io.StringReader expr-string)
               pbreader (new java.io.PushbackReader sreader)]
     [(read pbreader) (read pbreader)]))
 
-(defn- find-expressions [docstr]
-  (let [doctest-strings (drop 1 (split docstr #"=>"))]
-    (map read-expr-pair doctest-strings)))
+(defn- find-expression-strings
+  "Finds expressions that they belong in a REPL. Namely, the => arrow
+  beginning a line followed by 2 expressions.
 
-(defn to-is [doc]
-  (let [exprs (find-expressions doc)]
+  => (find-expression-strings \"=> ((adder 1) 2) 3\")
+  (\" ((adder 1) 2) 3\")"
+  [docstr]
+  (drop 1 (re-split #"\n\s*=>" docstr)))
+
+(defn to-is
+  "Converts a doc-test to forms using clojure.test/is."
+  [doc]
+  (let [expr-strs (find-expression-strings doc)
+        exprs (map read-expr-pair expr-strs)]
     (map (fn [[expr result]] `(is (= (eval ~expr) ~result)))
          exprs)))
 
-(defmacro doctest
-  [f]
+(defmacro doc-test
   "Creates a (deftest ...) form based upon the examples in f's doc."
-  `(deftest testname#
-     ~@(to-is (eval `(:doc (meta (var ~f)))))))
+  [f]
+  (let [testname (gensym "doctest-")
+        doc-string (eval `(:doc (meta (var ~f))))
+        is-statments (to-is doc-string)]
+    (if (seq is-statments) ; only make a test is there are doc-tests
+      `(deftest ~testname
+         ~@is-statments))))
 
-
-(doctest adder)
-
-; what we're shooting for, approximately
-;(deftest adder10386
+; what the doc-test macro output is shooting for, approximately
+;(deftest doctest-adder-blah-blah
 ;  (let [[expr result] (read-expr-pair "((adder 1) 4) 3")]
 ;    (is (= (eval expr) result))))
+
+(doc-test adder)
+(doc-test read-expr-pair)
+;(doc-test find-expression-strings)
+;(doc-test to-is)
+(run-tests)
