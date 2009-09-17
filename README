@@ -1,0 +1,67 @@
+doc-test is a Clojure namespace that provides Python-like doctests [1].
+
+WHY DOC-TEST?
+-------------
+
+Examples are very useful in documentation and help to clarify the
+meaning of descriptions. Take #'clojure.set/join:
+
+    "When passed 2 rels, returns the rel corresponding to the natural
+    join. When passed an additional keymap, joins on the corresponding
+    keys."
+
+Que? A simple example is much more clear for someone reading the docs
+for the first time:
+
+    (def languages
+     #{{:name "C"       :type "procedural"}
+       {:name "Clojure" :type "functional"}
+       {:name "Haskell" :type "functional"}})
+    (def fun-level
+     #{{:type "procedural" :funness "meh"}
+       {:type "functional" :funness "awesome"}})
+
+    => (clojure.set/join languages fun-level)
+    #{{:name "Haskell", :type "functional", :funness "awesome"}
+      {:name "Clojure", :type "functional", :funness "awesome"}
+      {:name "C", :type "procedural", :funness "meh"}}
+
+Awesome. The only problem is that sometimes documentation and actual
+code fall out of sync with each other. Doc-tests provide a way to
+assure that doesn't happen. The examples in the documentation are
+tested with the rest of the code!
+
+HOW TO DOC-TEST
+---------------
+
+Here's an example function with some doc-tests:
+
+    (defn adder
+      "A simple function to test the doctest macro with.
+
+      => ((adder 1) 2)
+      4 ; incorrect!
+      => ((adder 4) 5)
+      9"
+      [n1]
+      (fn [n2] (+ n1 n2)))
+
+To generate the tests from #'adder's doc-string:
+
+     (doc-test adder)
+
+Put this wherever you've put the rest of your
+#'clojure.test/deftests. When the above test is run this error occurs:
+
+    FAIL in (adder__doc-test__88) (doc_test_tests.clj:19)
+    expected: (clojure.core/= ((adder 1) 2) (quote 4))
+      actual: (not (clojure.core/= 3 4))
+
+Doc-test makes efforts to make test failures easier to debug. Because
+your documentation is turned into standard clojure.test declarations,
+we see the failure display in the same way. The test name is the
+symbol's name along with "__doc-test__". The expected and actual
+statements are also exactly what was in the doc-string.
+
+[1] http://docs.python.org/library/doctest.html
+[2] http://clojure.org/API#toc662
